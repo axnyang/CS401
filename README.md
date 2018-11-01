@@ -59,7 +59,7 @@ Add here some questions you have for us, in general or project-specific.
 
 1. About the feminism related playlists: how can we use that information to improve our analysis of the image of women in the bigger datasets (Million songs etc..)?
  
-2/ Should we design ourselves a model for defining positive and negative image of women in the lyrics? Or perhaps we take an existing model (if there is one)?  
+2. Should we design ourselves a model for defining positive and negative image of women in the lyrics? Or perhaps we take an existing model (if there is one)?  
  
 3. Do we have enough content to complete a meaningful project? 
 
