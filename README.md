@@ -65,3 +65,18 @@ Add here some questions you have for us, in general or project-specific.
 
 4. Can we use some external datasets with the provided one?
 
+# Milestone 2
+
+For the data collection, we have based ourselves on the Million Song Dataset. From this huge data, we are only interested in four attributes:
+- The track id
+- The artist name
+- The year
+- The title
+
+In addition to that, we are also interested in the genre of the songs. Luckily, in the Million Song Dataset website, there is already a dataset with the track id and the genre. Thus, we downloaded the corresponding file. We have the genre information for around 191'000 songs. Moreover, we have direct access to the 4 attributes through an additional dataset of around 500'000 songs provided in the Million song website. 
+
+We decide to limit our analysis on this dataset for two reasons. First, manipulating the whole million songs dataset is both time consuming and would require the use of the cluster. Second, after a fast and simple instruction, we discovered that around 150'000 of the genre id are already in the subset we have found.
+
+Next, we use the API we mentionned during Milestone 1 to scrap and collect the lyrics. However, we couldn't find the lyrics of half our dataset. We have decided to keep looking for other alternatives to find the lyrics as they are of paramount importance in our project. Alternatively, we can use an additional dataset from the million song website containing bag of words data. We would like to avoid this alternative as it is a simple count of words in the songs and it removes them from the context in the songs.
+
+In our notebook, we have performed a first descriptive analysis of the merged datasets. The big proportion ( 41%) of the songs' genre is rock. Moreover, although the values of the year attribute range from 1920 to 2010, 91% of the tracks are from the 1980 to 2010. We believe this is due to the rapid growth of Rock from its birth in the fifties to achieve more than 50% of the music industry in the 70s to 80s. In our notebook, we have a plot showing this evolution. In our analysis, due to the genre unbalance, we will use a random subset of the rock music ( or the decade) to balance out the classes.
