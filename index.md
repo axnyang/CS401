@@ -1,45 +1,6 @@
 ---
 title: This line is used for the markdown to be correctly recognized
 ---
-
-```python
-#As always, we import everything
-import pandas as pd
-import os
-import re
-import hdf5_getters as getters
-import requests
-from bs4 import BeautifulSoup
-import numpy as np
-from collections import OrderedDict
-from tqdm import tqdm
-import nltk
-from nltk import word_tokenize
-from nltk.corpus import stopwords as stop_words
-from textblob import Word
-import pycountry
-from textblob import TextBlob
-from textblob.sentiments import NaiveBayesAnalyzer
-from gensim import corpora, models
-import matplotlib.pyplot as plt
-import json
-import pickle
-import lyricfetcher
-import csv
-import urllib
-from urllib.request import urlopen, HTTPError
-import langdetect
-
-import warnings
-warnings.filterwarnings('ignore')
-
-data_dir = './' + 'data'
-```
-
-    C:\ProgramData\Anaconda3\lib\site-packages\gensim\utils.py:1212: UserWarning: detected Windows; aliasing chunkize to chunkize_serial
-      warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
-    
-
 # Table of content
 
 1. [Introduction](#intro)
@@ -52,16 +13,9 @@ Music has changed a lot during the recent years. In this project, we propose sim
 
 # 2. Data Collection and Descriptive Analysis
 
-## 2.1 Collecting and combining song metadata
+We based our project on the <a href="https://labrosa.ee.columbia.edu/millionsong/Million">Million Song Dataset</a>. The Million Song Dataset is a freely-available collection of audio features and metadata for a million contemporary popular music tracks.  The Million Song Dataset is also a cluster of complementary datasets contributed by the community, such as the <a href="https://labrosa.ee.columbia.edu/millionsong/musixmatch">musicXmatch </a>, the official lyrics collection of the Million Song Dataset
 
-We based our project on the <a href="https://labrosa.ee.columbia.edu/millionsong/">Million Song Dataset</a>. The Million Song Dataset is a freely-available collection of audio features and metadata for a million contemporary popular music tracks.  The Million Song Dataset is also a cluster of complementary datasets contributed by the community, such as the <a href="https://labrosa.ee.columbia.edu/millionsong/musixmatch">musicXmatch </a>, the official lyrics collection of the Million Song Dataset or genre annotation datasets.
-
-We first created a dataframe using the Tagtraum genre annotation dataset (genre_dataset). This dataset contains genre information for 191401 songs.
-Then, we create an other dataframe, "year_dataset", using the part of the MSD that has information about the year each track was released. In addition to year, it also contains track_id, the name of the artist, and title of the track. This "year_dataset" contains 515576 data points.
-We combine the "genre_dataset" dataframe with the "year_dataset" dataframe: since we wanted to analyze the progression of feminism through lyrics over time, and we were also interested in how women were portrayed in different genres of music, we decided to take the intersection of these datasets (inner join on track ID), and the resulting data frame contains 152793 data points. This final dataset will be the one we will conduct our study on.
-
-The resulting dataframe contains information about Track ID, Year, Artist Name, Title of the song and Genre of the song.
-The years span from 1922 to 2010 and the genres come as a single label for each song, with few standards categories only. We decided not to use annotations like "pop-rock", "fusion jazz" and other combinations of genres in order to simplify the analysis of the data.
+Using an additional dataset obtained from the million song website that contains genre information, we created genre_dataset. This dataset contains genre information for 191401 songs. The cell below contains code for putting this data into a proper-formatted dataframe. Another helpful dataset obtained from the website of million song dataset is one that contains year the track was released. In addition to year, it also contains track_id, the name of the artist, and title of the track. This dataset contains 515576 data points. Since we wanted to analyze the progression of feminism through lyrics over time, and we were also interested in how women were portrayed in different genres of music, we decided to take the intersection of these datasets (inner join on track ID), and the resulting data frame contains 152793 data points. We save it to a csv file for accessing in the future. 
 
 
 ```python
@@ -146,51 +100,61 @@ year_artist_name_title_genre.head()
 
 
 
+No missing values !
 
-```python
-year_artist_name_title_genre.isna().sum()
-```
-
-
-
-
-    year           0
-    artist_name    0
-    title          0
-    genre          0
-    dtype: int64
-
-
-
-We see that our data is clean, without Nan values or missing values.
-
-## 2.2  Descriptive analysis of the metadata
-
-First, we are interested in seeing how many songs are represented per genre.
+We are interested in seeing how many songs are present in each genre. 
 
 
 ```python
+print(year_artist_name_title_genre['genre'].value_counts())
+
+# Visualizing the count using bar graph
 value_count_by_genre = year_artist_name_title_genre['genre'].value_counts().plot(kind = 'bar')
+value_count_by_genre
 ```
 
+    Rock          62344
+    Electronic    18043
+    Pop           11058
+    Jazz          10662
+    Rap            8156
+    Metal          8035
+    RnB            7692
+    Country        6652
+    Reggae         5475
+    Blues          4228
+    Folk           3484
+    Punk           2739
+    Latin          1954
+    World          1384
+    New Age         887
+    Name: genre, dtype: int64
 
-![png](output_13_0.png)
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x2b37c33e0f0>
+
 
 
 
 ```python
-plot = plt.pie(year_artist_name_title_genre['genre'].value_counts(), labels = year_artist_name_title_genre['genre'].value_counts().index.tolist(), autopct='%1.1f%%', explode= [0.1]*len(year_artist_name_title_genre['genre'].value_counts()), radius = 3)
+# Percentage of rock songs in the dataset
+
+round(100*year_artist_name_title_genre['genre'].value_counts()['Rock']/year_artist_name_title_genre['genre'].value_counts().sum(),3)
 ```
 
 
-![png](output_14_0.png)
 
 
-We see an abundance of Rock music in this dataset as close to half of the songs (40.8 %) present are labelled as Rock music. We wonder why that is. Is Rock Music more likely to get labelled?
+    40.803
 
-Ok, stop joking. We suspect that this is due to the fast growth of Rock music during the 1990s and 2000s. We will explore the relationship between year and genre of music further to confirm our hypothesis. 
 
-Let us first have a look at how our data is distributed throughout the decades. Upon quick analysis we realize that the dataset contains music up to the year 2010. We consider the few songs released in 2010 as part of the 2000s, as it is more convenient for simple result visualisation.
+
+We see an abundance of Rock music in this dataset as close to half of the songs (40.8 %) present are labelled as Rock music. We wonder why that is. Is Rock Music more likely to get labelled? (<- this is a joke). We suspect that this is due to the fast growth of Rock music during the 1990s and 2000s. We will explore the relationship between year and genre of music further to confirm our hypothesis. 
+
+Let us first have a look at the count of music by time. Since it is impossible to visualize the count for every single year, we first group years into decades. Upon quick analysis we realize that the dataset contains music up to the year 2010. We consider 2010 a part of the 2000s. 
 
 
 ```python
@@ -201,27 +165,6 @@ year_artist_name_title_genre['decade'] = (year_artist_name_title_genre['year'] /
 year_artist_name_title_genre['decade'] = np.where(year_artist_name_title_genre.year.isin(['2010']),'2000', 
                                                   year_artist_name_title_genre['decade'])
 ```
-
-
-```python
-round(100*(1 - year_artist_name_title_genre['decade'].value_counts().cumsum() / year_artist_name_title_genre['decade'].value_counts().sum()),3)
-```
-
-
-
-
-    2000    41.294
-    1990    17.279
-    1980     8.639
-    1970     3.181
-    1960     0.838
-    1950     0.220
-    1940     0.130
-    1930     0.057
-    1920     0.000
-    Name: decade, dtype: float64
-
-
 
 
 ```python
@@ -259,7 +202,7 @@ value_count_by_year
     1930      111
     1920       87
     Name: decade, dtype: int64
-    
+
 
 
 
@@ -269,7 +212,7 @@ value_count_by_year
 
 
 
-![png](output_20_2.png)
+![png](output_15_2.png)
 
 
 We see that there are very few data points earlier than 1970, which makes analysis over time biased. During the next few steps as we explore the relationship between genre and decade further, we only consider the time period of 1970 to 2010. 
@@ -294,7 +237,7 @@ plot_decade_genre.legend(bbox_to_anchor=(1.1, 1.05) )
 
 
 
-![png](output_22_1.png)
+![png](output_17_1.png)
 
 
 We see that Rock music grew significantly in 40 years. Rock, Electronic, and Pop are the most popular music during the 2000s, followed by metal and Rap. The next plot considers the genres individually, and illustrates their share in the music market over the period of 1970 to 2010. 
@@ -313,7 +256,7 @@ decade_genre.groupby(['genre', 'decade']).size().unstack().plot(kind='bar', stac
 
 
 
-![png](output_24_1.png)
+![png](output_19_1.png)
 
 
 # TODO: improve this graph
@@ -335,7 +278,7 @@ decade_rock = year_artist_name_title_genre.groupby(['genre','decade']).size()
 
 
 
-![png](output_26_1.png)
+![png](output_21_1.png)
 
 
 The plot is a bitt hard to read. The curve represents the percentage of rock tracks in our dataset through time. We can clearly see that it has increased drastically from the 60s to 2010. We believe that the slight decrease from 90s is due to the increasing success of RNB, rap, pop and Electronic music during that period.
@@ -481,6 +424,8 @@ def scrape_lyrics(artists_list,songs_list):
     
     '''
     
+    # Initialize and raise error in case the lists lenghts do not match
+    
     lyrics_not_found = []
     if (len(artists_list) == 0 or len(songs_list) == 0):
         raise ValueError('The provided artists list or songs list is empty')
@@ -490,25 +435,36 @@ def scrape_lyrics(artists_list,songs_list):
         print("songs list has len: ", len(songs_list))
         raise ValueError('The provided artists and songs lists have different lenghts')
         
+    # If everything is fine
+        
     else:
         lyrics = []
         
         for i in tqdm(range(len(artists_list))):
             
             try:
+                
+                # First try with metro lyrics
+                
                 lyrics_metro = str(lyricfetcher.get_lyrics('metrolyrics',artists_list[i],songs_list[i]))
                 lyrics_metro = re.sub(r'[\[].*?[\]]', '', lyrics_metro.replace('\n', ' '))
                 lyrics_metro = re.sub(',', '', lyrics_metro)
+                
+                # If metro lyrics did not find anything, change to AZ lyrics
 
                 if (lyrics_metro == "" or len(lyrics_metro.split())<3):
                     lyrics_az = str(lyricfetcher.get_lyrics('azlyrics',artists_list[i],songs_list[i]))
                     lyrics_az = re.sub(r'[\[].*?[\]]', '', lyrics_az.replace('\n', ' '))
                     lyrics_az = re.sub(',', '', lyrics_az)
+                    
+                    # If AZ lyrics did not find anything, change to lyrics wikia
 
                     if (lyrics_az == "" or len(lyrics_az.split())<3):
                         lyrics_wikia = str(lyricfetcher.get_lyrics('lyricswikia',artists_list[i],songs_list[i]))
                         lyrics_wikia = re.sub(r'[\[].*?[\]]', '', lyrics_wikia.replace('\n', ' '))
                         lyrics_wikia = re.sub(',', '', lyrics_wikia)
+                        
+                        # If lyrics wikia did not find anything, change to the herokuapp API
                         
                         if (lyrics_wikia == "" or len(lyrics_wikia.split())<3):
                             try:
@@ -521,9 +477,14 @@ def scrape_lyrics(artists_list,songs_list):
                             lyrics_herokuapp = re.sub(r'[\[].*?[\]]', '', lyrics_herokuapp.replace('\n', ' '))
                             lyrics_herokuapp = re.sub(',', '', lyrics_herokuapp)
                             
+                            # If everything failed, return empty string
+                            
                             if (lyrics_herokuapp == "" or len(lyrics_herokuapp.split())<3):
+                                lyrics.append("")
                                 raise ValueError('No lyrics OR lyrics smaller or equal to 2 words found')
                                 
+                                
+                            # If it worked fine, we simply append the lyrics to the list
                             else:
                                 lyrics.append(lyrics_herokuapp)
                         else:
@@ -532,12 +493,12 @@ def scrape_lyrics(artists_list,songs_list):
                         lyrics.append(lyrics_az)
                 else:
                     lyrics.append(lyrics_metro)
-                
-            except:
+                    
+            # If the lyrics were not found, we append to the lyrics_not_found list the tuples of artists and titles that could not be found
+                    
+            except ValueError:
                 lyrics_not_found.append([artists_list[i],songs_list[i]])
-                lyrics.append("")
                 continue
-                
     return lyrics, lyrics_not_found
 ```
 
@@ -602,8 +563,129 @@ neutral_csv = "/neutral_lyrics_dataframe.csv"
 ```python
 #Provide BELOW the full set of tracks you would like to get in final (XXX_to_scrape)
 #-----------------------------------------------------------------------------
-positive_titles_to_scrape = ['About a Girl', "Ain't No Way to Treat a Lady", "Ain't Nothin' Goin' On but the Rent", "Ain't Your Mama", 'All Hands on Deck', 'All I Wanna Do', 'All Woman', 'Anything You Can Do (I Can Do Better)', 'Asking for It', 'Bag It Up', 'Be a Man', 'Beautiful', 'Beautiful Liar', 'Bickenhead', 'Bills Bills Bills', 'Bitch', 'Bitch Bad', 'Black Magic', 'Black Widow', 'Born This Way', 'Boss', 'Bossy', 'Boys Wanna Be Her', 'Break Free', "Brenda's Got a Baby", 'Broken Heels', 'Bulletproof', 'Call Me', "Can't Hold Us Down", 'Catch My Breath', 'Chick Fit', 'Cinderella', 'Commander', 'Conceited', 'Confident', 'Control', 'Cornflake Girl', 'Creep', 'Dancing Barefoot', 'Dear Mama', 'Dicknail', 'Diva', 'Django Jane', 'Do It like a Dude', 'Do Right Woman Do Right Man', 'Doubt', 'Drunk Girl', 'Dust Cake Boy', 'Electric Lady', 'Express Yourself', 'Fall in Line', 'Fancy', 'Feedback', 'Female', 'Fight Like a Girl', 'Fighter', 'Flawless', 'FM Doll', 'Follow Your Arrow', 'Four Women', 'G.U.Y.', 'Get Some', 'Girl', 'Girl in a Country Song', 'Girl on Fire', 'Girls Just Want to Have Fun', 'Girls with Guitars', 'God Is a Woman', 'Good Good', 'Hair', 'Handle Me', 'Hard out Here', "He Thinks He'll Keep Her", 'Hey Hey Hey', 'Hey Mama', "Hit 'Em Up Style (Oops!)", 'Hollaback Girl', 'Human Nature', 'Hush Hush; Hush Hush', 'I Am Woman', 'I Do Not Hook Up', "I Don't Think About You", 'I Got That', 'I Hate Boys', 'I Love It', 'I Will Survive', "I'm Coming Out", "I'm Every Woman", 'If I Were a Boy', 'Independence Day', 'Independent Women', 'Irreplaceable', "It's Not Right but It's Okay", 'Joan of Arc', 'Jump', 'Just a Girl', 'Keep Ya Head Up', "Keeps Gettin' Better", 'Kick Your Game', 'Kool Thing', 'Lady Powers', 'Ladykillers', 'Learn to Let Go', 'Leash Called Love', 'Let It Go', 'Liberty Walk', 'Like a Boy', 'Lipstick', 'Listen', 'Little Baby Nothing', 'Little Me', 'Live It Up', 'Lookin Ass', "Love 'Em All", 'Love Myself', 'Lush Life', 'Man! I Feel Like a Woman!', 'The March of the Women', 'Me & My Girls', 'Me Myself and I', 'Miss Independent', 'Most Girls', 'Nasty', 'New Rules (song)', 'Nice for What', 'No', 'No Black Person Is Ugly', 'No More Tears (Enough Is Enough)', 'No Scrubs', 'No You Girls', 'None of Your Business', 'Nothing to Prove', 'Obsessed', 'Oh Bondage Up Yours!', 'Oops (Oh My)', "Papa Don't Preach", 'Paper or Plastic', 'Part of Me', 'Part of Your World', 'Partition', "People Grinnin'", 'Picture to Burn', 'The Pill', 'Polly', 'Power', "Pretend We're Dead", 'Pretty Girl', 'Pretty Girl Rock', 'Pretty Girls', 'Pretty Hurts', 'Primadonna', 'Pynk', 'Q.U.E.E.N.', 'Real Things', "Really Don't Care", 'Rebel Girl', 'Red Dress', 'Respect', 'Roar', 'Rock Steady', 'A Rose Is Still a Rose', 'Run the World (Girls)', 'Salute', "Say You'll Be There", 'Scars to Your Beautiful', 'Second Skin', 'Secrets', 'She', 'She Bop', 'She Loves Control', 'She Works Hard for the Money', 'Sheena Is a Punk Rocker', 'Sheezus', 'Single Ladies (Put a Ring on It)', 'Sisters O Sisters', 'Sit Still Look Pretty', 'Skinny Genes', 'Skyscraper', 'Sledgehammer', 'SMS (Bangerz)', 'So What', 'Sorry', 'Strong Enough', 'Stronger', "Stronger (What Doesn't Kill You)", 'Stupid Girls', 'Superwoman', 'Superwoman', 'Survivor', 'Sweet but Psycho', 'U + Ur Hand', 'U.N.I.T.Y.', 'Ugly', 'Ugly Heart', 'Unpretty', 'Unstoppable', 'Unwritten', 'Upgrade U', 'Violet', 'Wannabe', 'Warrior', 'What It Feels Like for a Girl', 'What You Waiting For?', 'Whatcha Think About That', 'When a Man Loves a Woman', 'When I Grow Up', 'White Houses', 'Who Let the Dogs Out?', 'Who Says', "Who's That Girl", 'Whole Lotta Woman', 'Wild Things', 'Wind It Up', 'Woman', 'Woman Is the Nigger of the World', "Woman's World", 'Womanizer', "A Woman's Worth", 'Women', 'Worth It', 'Yang Yang', "You Don't Know Me", "You Don't Own Me", 'You Oughta Know']
-positive_artists_to_scrape =['Sugababes', 'Helen Reddy', 'Gwen Guthrie', 'Jennifer Lopez', 'Tinashe', 'Sheryl Crow', 'Lisa Stansfield', 'Ethel Merman', 'Hole', 'Geri Halliwell', 'Hole', 'Christina Aguilera', 'Shakira', 'Cardi B', "Destiny's Child", 'Meredith Brooks', 'Lupe Fiasco', 'Little Mix', 'Iggy Azalea', 'Lady Gaga', 'Fifth Harmony', 'Kelis', 'Peaches', 'Ariana Grande', 'Tupac Shakur', 'Alexandra Burke', 'La Roux', 'Blondie', 'Christina Aguilera', 'Kelly Clarkson', 'All Saints', 'i5', 'Kelly Rowland', 'Remy Ma', 'Demi Lovato', 'Janet Jackson', 'Tori Amos', 'TLC', 'Patti Smith', '2Pac', 'Hole', 'Beyonce', 'Janelle Monae', 'Jessie J', 'Aretha Franklin', 'Mary J. Blige', 'Chris Janson', 'Babes in Toyland', 'Janelle Monae', 'Madonna', 'Christina Aguilera', 'Drake', 'Janet Jackson', 'Shane McAnally', 'Bomshel', 'Christina Aguilera', 'Beyonce', 'Queenadreena', 'Kacey Musgraves', 'Nina Simone', 'Lady Gaga', 'Lykke Li', "Destiny's Child", 'Maddie & Tae', 'Alicia Keys', 'Cyndi Lauper', 'Mary Chapin Carpenter', 'Ariana Grande', 'Ashanti', 'Little Mix', 'Robyn', 'Lily Allen', 'Mary Chapin Carpenter', 'Katy Perry', 'David Guetta', 'Blu Cantrell', 'Gwen Stefani', 'Madonna', 'Pussycat Dolls', 'Jordin Sparks', 'Kelly Clarkson', 'Kelly Clarkson', 'Amil', 'Christina Aguilera', 'Icona Pop', 'Gloria Gaynor', 'Diana Ross', 'Chaka Khan', 'Beyonce', 'Martina McBride', "Destiny's Child", 'Beyonce', 'Whitney Houston', 'Little Mix', 'Madonna', 'No Doubt', '2Pac', 'Christina Aguilera', 'TLC', 'Sonic Youth', 'Vera Blue', 'Lush', 'Kesha', 'Sugarcubes', 'Idina Menzel', 'Miley Cyrus', 'Ciara', 'Alesha Dixon', 'Beyonce', 'Manic Street Preachers', 'Little Mix', 'Jennifer Lopez', 'Nicki Minaj', 'K.Michelle', 'Hailee Steinfeld', 'Zara Larsson', 'Shania Twain', 'Cicely Hamilton', 'Selena Gomez', 'Beyonce', 'Kelly Clarkson', 'Hailee Steinfeld', 'Janet Jackson', 'Dua Lipa', 'Drake', 'Meghan Trainor', 'Lil B', 'Barbra Streisand', 'TLC', 'Franz Ferdinand', 'Salt-n-Pepa', 'Doubleclicks', 'Mariah Carey', 'X-Ray Spex', 'Tweet', 'Madonna', 'Brooke Candy', 'Katy Perry', 'Jodi Benson', 'Beyonce', 'Nervo', 'Taylor Swift', 'Loretta Lynn', 'Nirvana', 'Little Mix', 'L7', 'Maggie Lindemann', 'Keri Hilson', 'Britney Spears', 'Beyonce', 'Marina and the Diamonds', 'Janelle Monae', 'Janelle Monae', 'Javine', 'Demi Lovato', 'Bikini Kill', 'Sugababes', 'Aretha Franklin', 'Katy Perry', 'All Saints', 'Lauryn Hill', 'Beyonce', 'Little Mix', 'Spice Girls', 'Alessia Cara', 'The Gits', 'Mary Lambert', 'Green Day', 'Cyndi Lauper', 'Camila Cabello', 'Donna Summer', 'the Ramones', 'Lily Allen', 'Beyonce', 'Yoko Ono', 'Daya', 'Eliza Doolittle', 'Demi Lovato', 'Fifth Harmony', 'Miley Cyrus', 'P!nk', 'Madonna', 'Cher', 'Britney Spears', 'Kelly Clarkson', 'P!nk', 'Alicia Keys', 'Karyn White', "Destiny's Child", 'Ava Max', 'P!nk', 'Queen Latifah', 'Fantasia', 'G.R.L', 'TLC', 'Sia', 'Natasha Bedingfield', 'Beyonce', 'Hole', 'Spice Girls', 'Nina Sublatti', 'Madonna', 'Gwen Stefani', 'The Pussycat Dolls', 'Jody Watley', 'The Pussycat Dolls', 'Vanessa Carlton', 'Baha Men', 'Selena Gomez', 'Robyn', 'Kelly Clarkson', 'Alessia Cara', 'Gwen Stefani', 'Kesha', 'John Lennon', 'Cher', 'Britney Spears', 'Alicia Keys', 'Amanda Lear', 'Fifth Harmony', 'Yoko Ono', 'Jax Jones', 'Lesley Gore', 'Alanis Morissette']
+positive_artists_to_scrape = ["Sugababes","Helen Reddy","Gwen Guthrie","Jennifer Lopez","Tinashe","Sheryl Crow","Lisa Stansfield",
+                     "Ethel Merman", "Hole", "Geri Halliwell","Hole","Christina Aguilera","Shakira","Cardi B","Destiny's Child",
+                    "Meredith Brooks","Lupe Fiasco","Little Mix","Iggy Azalea","Lady Gaga","Fifth Harmony","Kelis","Peaches",
+                   "Ariana Grande","Tupac Shakur","Alexandra Burke","La Roux"]
+positive_titles_to_scrape = ["About a Girl", "Ain't No Way to Treat a Lady","Ain't Nothin' Goin' On but the Rent","Ain't Your Mama",
+                    "All Hands on Deck", "All I Wanna Do", "All Woman","Anything You Can Do (I Can Do Better)",
+                    "Asking for It"]
+
+positive_titles_to_scrape += ["Bag It Up",
+"Be a Man",
+"Beautiful",
+"Beautiful Liar",
+"Bickenhead",
+"Bills Bills Bills",
+"Bitch",
+"Bitch Bad",
+"Black Magic",
+"Black Widow",
+"Born This Way",
+"Boss",
+"Bossy",
+"Boys Wanna Be Her",
+"Break Free",
+"Brenda's Got a Baby",
+"Broken Heels",
+"Bulletproof"]
+
+positive_artists_to_scrape += ["Blondie","Christina Aguilera","Kelly Clarkson","All Saints",
+                      "i5","Kelly Rowland", "Remy Ma","Demi Lovato","Janet Jackson","Tori Amos",
+                     "TLC",]
+positive_titles_to_scrape += ["Call Me", 
+"Can't Hold Us Down",
+"Catch My Breath",
+"Chick Fit",
+"Cinderella", 
+"Commander",
+"Conceited", 
+"Confident", 
+"Control", 
+"Cornflake Girl",
+"Creep"]
+
+positive_artists_to_scrape += ["Patti Smith","2Pac","Hole","Beyonce","Janelle Monae","Jessie J","Aretha Franklin",
+                     "Mary J. Blige","Chris Janson","Babes in Toyland", "Janelle Monae", "Madonna","Christina Aguilera",
+                     "Drake","Janet Jackson","Shane McAnally","Bomshel","Christina Aguilera",
+                     "Beyonce","Queenadreena","Kacey Musgraves","Nina Simone"]
+positive_titles_to_scrape += ["Dancing Barefoot","Dear Mama","Dicknail","Diva","Django Jane",
+                    "Do It like a Dude",
+                    "Do Right Woman Do Right Man","Doubt","Drunk Girl","Dust Cake Boy","Electric Lady", 
+                    "Express Yourself", "Fall in Line","Fancy","Feedback","Female","Fight Like a Girl",
+                     "Fighter","Flawless","FM Doll","Follow Your Arrow","Four Women"]
+
+positive_artists_to_scrape += ["Lady Gaga","Lykke Li","Destiny's Child","Maddie & Tae","Alicia Keys",
+                     "Cyndi Lauper","Mary Chapin Carpenter","Ariana Grande","Ashanti","Little Mix",
+                     "Robyn","Lily Allen","Mary Chapin Carpenter", "Katy Perry",
+                     "David Guetta", "Blu Cantrell", "Gwen Stefani", "Madonna", "Pussycat Dolls",
+                     "Jordin Sparks","Kelly Clarkson","Kelly Clarkson","Amil","Christina Aguilera",
+                     "Icona Pop", "Gloria Gaynor","Diana Ross","Chaka Khan", "Beyonce","Martina McBride",
+                     "Destiny's Child","Beyonce","Whitney Houston","Little Mix","Madonna","No Doubt","2Pac","Christina Aguilera",
+                     "TLC","Sonic Youth","Vera Blue","Lush"]
+positive_titles_to_scrape += ["G.U.Y.","Get Some","Girl","Girl in a Country Song",
+                     "Girl on Fire","Girls Just Want to Have Fun","Girls with Guitars",
+                     "God Is a Woman","Good Good","Hair","Handle Me","Hard out Here",
+                     "He Thinks He'll Keep Her","Hey Hey Hey","Hey Mama", 
+                     "Hit 'Em Up Style (Oops!)","Hollaback Girl","Human Nature","Hush Hush; Hush Hush",
+                     "I Am Woman","I Do Not Hook Up",
+                     "I Don't Think About You","I Got That","I Hate Boys",
+                     "I Love It", "I Will Survive","I'm Coming Out","I'm Every Woman",
+                     "If I Were a Boy","Independence Day","Independent Women",
+                     "Irreplaceable",
+                     "It's Not Right but It's Okay","Joan of Arc","Jump",
+                     "Just a Girl","Keep Ya Head Up", "Keeps Gettin' Better", "Kick Your Game","Kool Thing",
+                    "Lady Powers","Ladykillers"]
+
+positive_artists_to_scrape += ["Kesha", "Sugarcubes","Idina Menzel","Miley Cyrus","Ciara","Alesha Dixon","Beyonce",
+                      "Manic Street Preachers", "Little Mix","Jennifer Lopez","Nicki Minaj","K.Michelle",
+                     "Hailee Steinfeld","Zara Larsson","Shania Twain","Cicely Hamilton","Selena Gomez","Beyonce",
+                      "Kelly Clarkson","Hailee Steinfeld","Janet Jackson","Dua Lipa","Drake","Meghan Trainor",
+                      "Lil B","Barbra Streisand","TLC","Franz Ferdinand","Salt-n-Pepa","Doubleclicks","Mariah Carey",
+                      "X-Ray Spex","Tweet","Madonna","Brooke Candy","Katy Perry","Jodi Benson","Beyonce","Nervo",
+                      "Taylor Swift","Loretta Lynn","Nirvana","Little Mix","L7","Maggie Lindemann","Keri Hilson",
+                      "Britney Spears","Beyonce","Marina and the Diamonds","Janelle Monae"
+                     ]
+positive_titles_to_scrape += ["Learn to Let Go","Leash Called Love","Let It Go","Liberty Walk","Like a Boy",
+                     "Lipstick","Listen","Little Baby Nothing","Little Me","Live It Up","Lookin Ass",
+                     "Love 'Em All","Love Myself","Lush Life","Man! I Feel Like a Woman!","The March of the Women",
+                     "Me & My Girls","Me Myself and I","Miss Independent","Most Girls",
+                    "Nasty","New Rules (song)","Nice for What","No","No Black Person Is Ugly",
+                     "No More Tears (Enough Is Enough)","No Scrubs","No You Girls","None of Your Business",
+                     "Nothing to Prove","Obsessed", "Oh Bondage Up Yours!","Oops (Oh My)",
+                     "Papa Don't Preach","Paper or Plastic","Part of Me","Part of Your World","Partition",
+                     "People Grinnin'","Picture to Burn","The Pill","Polly","Power","Pretend We're Dead",
+                     "Pretty Girl","Pretty Girl Rock","Pretty Girls","Pretty Hurts","Primadonna","Pynk"]
+
+positive_artists_to_scrape += ["Janelle Monae","Javine","Demi Lovato","Bikini Kill","Sugababes","Aretha Franklin","Katy Perry",
+                     "All Saints","Lauryn Hill","Beyonce","Little Mix","Spice Girls","Alessia Cara","The Gits","Mary Lambert",
+                     "Green Day","Cyndi Lauper","Camila Cabello","Donna Summer","the Ramones","Lily Allen","Beyonce",
+                     "Yoko Ono","Daya","Eliza Doolittle","Demi Lovato","Fifth Harmony","Miley Cyrus","P!nk","Madonna",
+                     "Cher","Britney Spears","Kelly Clarkson","P!nk","Alicia Keys","Karyn White","Destiny's Child",
+                     "Ava Max","P!nk","Queen Latifah","Fantasia","G.R.L","TLC","Sia","Natasha Bedingfield","Beyonce",
+                     "Hole"]
+
+positive_titles_to_scrape += ["Q.U.E.E.N.","Real Things","Really Don't Care","Rebel Girl","Red Dress",
+                     "Respect","Roar","Rock Steady","A Rose Is Still a Rose",
+                     "Run the World (Girls)","Salute","Say You'll Be There","Scars to Your Beautiful","Second Skin",
+                     "Secrets","She","She Bop","She Loves Control","She Works Hard for the Money","Sheena Is a Punk Rocker",
+                     "Sheezus","Single Ladies (Put a Ring on It)","Sisters O Sisters","Sit Still Look Pretty",
+                    "Skinny Genes","Skyscraper","Sledgehammer","SMS (Bangerz)","So What","Sorry","Strong Enough",
+                    "Stronger", "Stronger (What Doesn't Kill You)","Stupid Girls","Superwoman","Superwoman","Survivor", 
+                    "Sweet but Psycho","U + Ur Hand","U.N.I.T.Y.","Ugly","Ugly Heart","Unpretty","Unstoppable", 
+                     "Unwritten","Upgrade U","Violet"]
+
+positive_artists_to_scrape += ["Spice Girls","Nina Sublatti","Madonna","Gwen Stefani","The Pussycat Dolls","Jody Watley",
+                     "The Pussycat Dolls","Vanessa Carlton","Baha Men","Selena Gomez","Robyn","Kelly Clarkson",
+                     "Alessia Cara","Gwen Stefani","Kesha","John Lennon","Cher","Britney Spears","Alicia Keys",
+                     "Amanda Lear","Fifth Harmony","Yoko Ono","Jax Jones","Lesley Gore","Alanis Morissette"]
+
+positive_titles_to_scrape += ["Wannabe","Warrior","What It Feels Like for a Girl","What You Waiting For?",
+                     "Whatcha Think About That","When a Man Loves a Woman","When I Grow Up",
+                     "White Houses","Who Let the Dogs Out?","Who Says","Who's That Girl","Whole Lotta Woman",
+                     "Wild Things","Wind It Up","Woman","Woman Is the Nigger of the World","Woman's World",
+                     "Womanizer","A Woman's Worth","Women", "Worth It","Yang Yang","You Don't Know Me","You Don't Own Me",
+                     "You Oughta Know"]
 #-----------------------------------------------------------------------------
 ```
 
@@ -613,18 +695,316 @@ positive_tokens, positive_lyrics = create_BOW_lyrics_dataframe(positive_artists_
 ```
 
     100%|████████████████████████████████████████████████████████████████████████████████| 224/224 [00:54<00:00,  4.11it/s]
-    
+
 
     [['Shane McAnally', 'Female'], ['Mary Chapin Carpenter', 'Girls with Guitars'], ['K.Michelle', "Love 'Em All"], ['Cicely Hamilton', 'The March of the Women'], ['Beyonce', 'Me Myself and I'], ['Doubleclicks', 'Nothing to Prove'], ['Lauryn Hill', 'A Rose Is Still a Rose'], ['G.R.L', 'Ugly Heart'], ['Amanda Lear', 'Women']]
     Count of not found lyrics : 9
-    
+
 
 ### 4.3.2. From the user defined sexist songs
 
 
 ```python
-sexist_artists_to_scrape=["Foreigner","CyndiLauper","RayJ","AdinaHoward","Cassie","Tone-Loc","GeorgeMichael","DonnaSummer","Prince","JohnnyGill","Juvenile","RobertaFlack","Sylvia","DefLeppard","R.Kelly","Poison","MarvinGaye","DonnaSummer","Labelle","PeterGabriel","MissyElliott","ThePointerSisters","Heart","Usher","KarynWhite","Akon","R.Kelly","BellBivDevoe","Silk","GregoryAbbott","StarlandVocalBand","50Cent","Monica","AnitaWard","NellyFurtado","ToniBraxton","ColorMeBadd","DonnaSummer","LilWayne","TheRollingStones","RodStewart","Exile","Madonna","Captain&Tennille","DonnaSummer","MarvinGaye","Next","BoyzIIMen","RodStewart","OliviaNewton-John","LilWayne","TheDeadExs","MajorLazer","YoungMoney","EnriqueIglesias","RobinThicke","Kiss","BritneySpears","LilWayne","Dr.Dre","DavidGuetta","NickiMinaj","Whitesnake","AnalCunt","ChrisBrown","Prince","Falco","TheMentors","TheProdigy","Eminem","Eminem","DierksBentley","Nickelback","YoungMoney","VanHalen","RobertHazard","DemiLovato","BonJovi","AlannahMyles","Prince","Manika","ChristinaAguilera","Rihanna","Maroon5","FettyWap","Akon","Raelynn","SirMixALot","NotoriousBIG","TylerFarr","Usher","Syd","TheCitrusCloud","RoJames","SiR","Miguel","CharliePuth","Miguel","Nao","HarryStyles","LanaDelRey","LanaDelRey","Shaggy","TheCrystals","OneDirection","Beatles","TheWeeknd","AlexGaudino","BobSinclar","Vleger","SashaLopez","DavidGuetta","Pitbull","EricPrydz","Madonna","FeddeLeGrand","BlackEyedPeas","Eminem","FrankLoesser","JasonDerulo","YG","TylerTheCreator","Dr.Dre","Outkast","Eminem","WakaFlockaFlame","LilWayne","YingYangTwins","Common","GhostfaceKillah","Eminem","Eminem","Eminem","Eminem","SnoopDog","Eminem","Jeremih","ChrisBrown","Timbaland","Milow","ChrisBrown","Akon","Akon","Pitbull","Pitbull","Rocko","Rocko","AsapRocky","BennyBenassi"]
-sexist_titles_to_scrape=["Urgent","Shebop","SexyCanI","FreakLikeMe","Me&U","WildThing","IWantYourSex","DimAllTheLights","RaspberryBeret","RubyoutheRightWay","SlowMotion","FeelLikeMakin'Love","PillowTalk","PourSomeSugaronMe","BumpN'Grind","UnskinnyBop","SexualHealing","LoveToLoveYouBaby","LadyMarmalade","Slegehammer","WorkIt","SlowHand","AllIWantToDoIsMakeLoveToYou","LoveInThisClub","Romantic","SmackThat","Ignition","DoMe!","FreakMe","ShakeYouDown","AfternoonDelight","CandyShop","TheFirstNight","RingMyBell","Promiscuous","You'reMakin'MeHigh","IWannaSexYouUp","BadGirls","Lollipop","HonkyTonkWomen","DaYaThinkI'mSexy","KissYouAllOver","LikeAVirgin","DoThatToMeOneMoreTime","HotStuff","Let'sGetItOn","TooClose","I'llMakeLoveToYou","Tonight'sTheNight","Physical","LoveMe","ShutUpandLoveMe","BubbleButt","Lookin'Ass","Tonight(I'mFuckin'You)","BlurredLines","IJustWanna","I'maSlave4U","HowtoLove","BitchesAin'tShit","HeyMama","Anaconda","SlowAn'Easy","Woman:Nature'sPunchingBag","Loyal","Cream","Jeanny","GoldenShower","SmackMyBitchUp","Superman","LovetheWayYouLie","DifferentforGirls","SomethinginYourMouth","EveryGirl","DropDeadLegs","GirlsJustWanttoHaveFun","BodySay","Let'sMakeItBaby","BlackVelvet","Kiss","IMightGoLesbian","Dirrty","S&M","Animals","679","IWannaFuckYou","GodMadeGirls","BabyGotBack","NastyGirl","RedneckCrazy","LoveInThisClub","SmileMore","LostWolves","BurnSlow","OohNahNah","PussyIsMine","Suffer","...goingtohell","BadBlood","FeelsLike","Love","LustForLife","ItWasn'tMe","HeHitMe","WhatMakesYouBeautiful","RunForYourLife","HighForThis","DestinationCalabria","WhatIWant","AfterNightInIbiza","BeautifulLife","PlayHard","InternationalLove","CallOnMe","HungUp","PutYourHandsUpForDetroit","MyHumps","KillYou","BabyIt'sColdOutside","Wiggle","TootitandBootit","Translyvania","BitchesAin'tShit","HootieHoo","ShakeThat","NoHands","AlphabetBitches","WaitTilYaSeeMyDick","HeidiHoe","Wildflower","AssLikeThat","GuiltyConscience","CleaningOutMyCloset","TheWarning","StepYoGameUp","WithoutMe","BirthdaySex","WetTheBed","CarryOut","AyoTechnology","Ayo","SexyBitch","IJustHadSex","HotelRoom","HeyBaby","YouDon'tEvenKnowIt","U.O.E.N.O.","Fuckin'Problems","Satisfaction"]
+sexist_artists_to_scrape = ["Foreigner",
+                     "Cyndi Lauper",
+                     "Ray J",
+                     "Adina Howard",
+                     "Cassie",
+                    "Tone-Loc",
+                    "George Michael",
+                     "Donna Summer",
+                     "Prince", 
+                       "Johnny Gill",
+                       "Juvenile",
+                       "Roberta Flack",
+                       "Sylvia",
+                       "Def Leppard",
+                       "R. Kelly",
+                       "Poison",
+                       "Marvin Gaye",
+                       "Donna Summer",
+                       "Labelle",
+                       "Peter Gabriel",
+                       "Missy Elliott",
+                       "The Pointer Sisters",
+                       "Heart",
+                       "Usher",
+                       "Karyn White",
+                       "Akon",
+                       "R. Kelly",
+                       "Bell Biv Devoe",
+                       "Silk",
+                       "Gregory Abbott",
+                       "Starland Vocal Band",
+                       "50 Cent" ,
+                        "Monica",
+                        "Anita Ward",
+                        "Nelly Furtado",
+                        "Toni Braxton",
+                        "Color Me Badd",
+                        "Donna Summer",
+                        "Lil Wayne",
+                        "The Rolling Stones",
+                        "Rod Stewart",
+                        "Exile",
+                        "Madonna",
+                        " Captain & Tennille",
+                        "Donna Summer",
+                        "Marvin Gaye",
+                        "Next",
+                        "Boyz II Men",
+                        "Rod Stewart",
+                        "Olivia Newton-John",
+                        "Lil Wayne",
+                        "The Dead Exs",
+                        "Major Lazer",
+                        "Young Money",
+                        "Enrique Iglesias",
+                        "Robin Thicke",
+                        "Kiss",
+                        "Britney Spears",
+                        "Lil Wayne",
+                        "Dr. Dre",
+                        "David Guetta",
+                        "Nicki Minaj",
+                        "Whitesnake",
+                        "Anal Cunt",
+                        "Chris Brown",
+                        "Prince",
+                        "Falco",
+                        "The Mentors",
+                        "The Prodigy",
+                        "Eminem",
+                        "Eminem",
+                        "Dierks Bentley",
+                        "Nickelback",
+                        "Young Money",
+                        "Van Halen",
+                        "Robert Hazard",
+                        "Demi Lovato",
+                        "Bon Jovi",
+                        "Alannah Myles",
+                        "Prince",
+                        "Manika",
+                        "Christina Aguilera",
+                        "Rihanna",
+                        "Maroon 5",
+                        "Fetty Wap",
+                        "Akon",
+                        "Raelynn",
+                        "Sir Mix A Lot",
+                        "Notorious BIG",
+                        "Tyler Farr",
+                        "Usher",
+                        "Syd",
+                        "The Citrus Cloud",
+                        "Ro James",
+                        "SiR",
+                        "Miguel",
+                        "Charlie Puth",
+                        "Miguel",
+                        "Nao",
+                        "Harry Styles",
+                        "Lana Del Rey",
+                        "Lana Del Rey",
+                        "Shaggy",
+                        "The Crystals",
+                        "One Direction",
+                        "Beatles",
+                        "The Weeknd",
+                        "Alex Gaudino",
+                        "Bob Sinclar",
+                        "Vleger",
+                        "Sasha Lopez",
+                        "David Guetta",
+                        "Pitbull",
+                        "Eric Prydz",
+                        "Madonna",
+                        "Fedde Le Grand",
+                        "Black Eyed Peas",
+                        "Eminem",
+                        "Frank Loesser",
+                        "Jason Derulo",
+                        "YG",
+                        "Tyler The Creator",
+                        "Dr. Dre",
+                        "Outkast",
+                        "Eminem",
+                        "Waka Flocka Flame",
+                        "Lil Wayne",
+                        "Ying Yang Twins",
+                        "Common",
+                        "Ghostface Killah",
+                        "Eminem",
+                        "Eminem",
+                        "Eminem",
+                        "Eminem",
+                        "Snoop Dog",
+                        "Eminem",
+                        "Jeremih",
+                        "Chris Brown",
+                        "Timbaland",
+                        "Milow",
+                        "Chris Brown",
+                        "Akon",
+                        "Akon",
+                        "Pitbull",
+                        "Pitbull",
+                        "Rocko",
+                        "Rocko",
+                        "Asap Rocky",
+                        "Benny Benassi"]
+
+
+sexist_titles_to_scrape = ["Urgent", 
+                    "She bop",
+                    "Sexy Can I",
+                    "Freak Like Me",
+                    "Me & U", 
+                    "Wild Thing", 
+                    "I Want Your Sex",
+                    "Dim All The Lights",
+                    "Raspberry Beret",
+                    "Rub you the Right Way",
+                    "Slow Motion",
+                    "Feel Like Makin' Love",
+                    "Pillow Talk",
+                    "Pour Some Sugar on Me",
+                    "Bump N' Grind",
+                    "Unskinny Bop",
+                    "Sexual Healing",
+                    "Love To Love You Baby",
+                    "Lady Marmalade",
+                    "Slegehammer",
+                    "Work It",
+                    "Slow Hand",
+                    "All I Want To Do Is Make Love To You",
+                    "Love In This Club",
+                    "Romantic",
+                    "Smack That",
+                    "Ignition",
+                    "Do Me!",
+                    "Freak Me",
+                    "Shake You Down",
+                    "Afternoon Delight",
+                    "Candy Shop",
+                    "The First Night",
+                    "Ring My Bell",
+                    "Promiscuous",
+                    "You're Makin' Me High",
+                    "I Wanna Sex You Up",
+                    "Bad Girls",
+                    "Lollipop",
+                    "Honky Tonk Women",
+                    "Da Ya Think I'm Sexy",
+                    "Kiss You All Over",
+                    "Like A Virgin",
+                    "Do That To Me One More Time",
+                    "Hot Stuff",
+                    "Let's Get It On",
+                    "Too Close",
+                    "I'll Make Love To You",
+                    "Tonight's The Night",
+                    "Physical",
+                    "Love Me",
+                    "Shut Up and Love Me",
+                    "Bubble Butt",
+                    "Lookin' Ass",
+                    "Tonight (I'm Fuckin' You)",
+                    "Blurred Lines",
+                    "I Just Wanna",
+                    "I'm a Slave 4 U",
+                    "How to Love",
+                    "Bitches Ain't Shit",
+                    "Hey Mama",
+                    "Anaconda",
+                    "Slow An' Easy",
+                    "Woman: Nature's Punching Bag",
+                    "Loyal",
+                    "Cream",
+                    "Jeanny",
+                    "Golden Shower",
+                    "Smack My Bitch Up",
+                    "Superman",
+                    "Love the Way You Lie",
+                    "Different for Girls",
+                    "Something in Your Mouth",
+                    "Every Girl",
+                    "Drop Dead Legs",
+                    "Girls Just Want to Have Fun",
+                    "Body Say",
+                    "Let's Make It Baby",
+                    "Black Velvet",
+                    "Kiss",
+                    "I Might Go Lesbian",
+                    "Dirrty ",
+                    "S&M",
+                    "Animals",
+                    "679",
+                    "I Wanna Fuck You",
+                    "God Made Girls",
+                    "Baby Got Back",
+                    "Nasty Girl",
+                    "Redneck Crazy",
+                    "Love In This Club",
+                    "Smile More",
+                    "Lost Wolves",
+                    "Burn Slow",
+                    "Ooh Nah Nah",
+                    "Pussy Is Mine",
+                    "Suffer",
+                    "...goingtohell",
+                    "Bad Blood",
+                    "Feels Like",
+                    "Love",
+                    "Lust For Life",
+                    "It Wasn't Me",
+                    "He Hit Me",
+                    "What Makes You Beautiful",
+                    "Run For Your Life",
+                    "High For This",
+                    "Destination Calabria",
+                    "What I Want",
+                    "After Night In Ibiza",
+                    "Beautiful Life",
+                    "Play Hard",
+                    "International Love",
+                    "Call On Me",
+                    "Hung Up",
+                    "Put Your Hands Up For Detroit",
+                    "My Humps",
+                    "Kill You",
+                    "Baby It's Cold Outside",
+                    "Wiggle",
+                    "Toot it and Boot it",
+                    "Translyvania",
+                    "Bitches Ain't Shit",
+                    "Hootie Hoo",
+                    "Shake That",
+                    "No Hands",
+                    "Alphabet Bitches",
+                    "Wait Til Ya See My Dick",
+                    "Heidi Hoe",
+                    "Wildflower",
+                    "Ass Like That",
+                    "Guilty Conscience",
+                    "Cleaning Out My Closet",
+                    "The Warning",
+                    "Step Yo Game Up",
+                    "Without Me",
+                    "Birthday Sex",
+                    "Wet The Bed",
+                    "Carry Out",
+                    "Ayo Technology",
+                    "Ayo",
+                    "Sexy Bitch",
+                    "I Just Had Sex",
+                    "Hotel Room",
+                    "Hey Baby",
+                    "You Don't Even Know It",
+                    "U.O.E.N.O.",
+                    "Fuckin' Problems",
+                    "Satisfaction"]
 ```
 
 
@@ -633,11 +1013,11 @@ sexist_tokens, sexist_lyrics = create_BOW_lyrics_dataframe(sexist_artists_to_scr
 ```
 
     100%|████████████████████████████████████████████████████████████████████████████████| 149/149 [00:42<00:00,  4.39it/s]
-    
+
 
     [['Peter Gabriel', 'Slegehammer'], ['The Dead Exs', 'Shut Up and Love Me'], ['The Citrus Cloud', 'Lost Wolves'], ['SiR', 'Ooh Nah Nah'], ['Harry Styles', 'Feels Like'], ['Vleger', 'After Night In Ibiza'], ['Tyler The Creator', 'Translyvania']]
     Count of not found lyrics : 7
-    
+
 
 ### 4.3.3. From the user-defined "neutral" songs
 
@@ -689,6 +1069,8 @@ feature_list = feature_list + positive_words + negative_words
 ```
 
 ## 4.5 Count the occurences of each keyword in the scraped BOW
+
+
 
 # TODO: add this section with final code
 
@@ -789,4 +1171,9 @@ pd.Series(dist).plot(kind='hist', bins = 100)
 for i in range(0,len(words)):
     if(words[i] in degrading_terms):
         print(words[i])
+```
+
+
+```python
+
 ```
