@@ -4,6 +4,11 @@ title:  "feminism in here !"
 featured-img: /data/feminism.png
 ---
 
+<div class="FeaturedImgBanner" {% if page.featured-img %} style="background-image: url('{{ page.featured-img }}');" {% endif %}>
+    Feminism in here too !
+</div>
+
+
 <div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
