@@ -1,4 +1,0 @@
-The cd2c is the useful one. It contains a clean "most probable" genre instead of
-majority/minority genre and hard combinations of genres like "Pop/rock" 
-that have been often tagget in the cd1 file.
-The 'genre_dataset.txt' file has been created FROM the cd2c file (see Dear Lyrics notebook).
