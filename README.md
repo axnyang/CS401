@@ -13,7 +13,7 @@ Ever since the beginning of the 20th century, a number of political and social m
 
 
 # Dataset
-We have collected the list of all artists Id ( https://labrosa.ee.columbia.edu/millionsong/sites/default/files/AdditionalFiles/unique_tracks.txt ) which we merged with the genre dataset (msd_tagtraum_cd2c.cls file in http://www.tagtraum.com/msd_genre_datasets.html ). Therefore, the final dataset is the intersection of these two files. Additionnally, we have manually selected and labelled new songs in order to construct a train set for our model. Finally, we have scraped the lyrics of all the english tracks through several web scraping APIs.
+We have collected 515.576 tracks for which we have the year information ( http://labrosa.ee.columbia.edu/millionsong/sites/default/files/AdditionalFiles/tracks_per_year.txt ) which we merged with the genre dataset (msd_tagtraum_cd2c.cls file in http://www.tagtraum.com/msd_genre_datasets.html ). Therefore, the final dataset is the intersection of these two files. Additionnally, we have manually selected and labelled new songs in order to construct a train set for our model. Finally, we have scraped the lyrics of all the english tracks through several web scraping APIs.
  
 
 # Notebooks
