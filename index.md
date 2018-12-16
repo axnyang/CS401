@@ -1,14 +1,12 @@
-<div class = "image">
-    <img src="data/fem.jpg", alt="feminism">
-    </div>
+---
+layout: post
+title:  "feminism in here !"
+featured-img: ./data/feminism.jpg
+---
 
-<div class="banner" style="background-image: linear-gradient(-225deg, rgba(0,101,168,0.6) 0%, rgba(0,36,61,0.6) 50%), url('data/fem.jpg');">
-  <div class="banner-content">
-    <h1>2 hour landing</h1>
-    <p>Learn HTML and CSS with Le Wagon</p>
-  </div>
+<div class="FeaturedImgBanner" {% if page.featured-img %} style="background-image: url('{{ page.featured-img }}');" {% endif %}>
+    Feminism in here too !
 </div>
-
 
 
 <div>
