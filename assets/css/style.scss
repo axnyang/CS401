@@ -3,6 +3,9 @@
 
 @import "{{ site.theme }}";
 
-.page-header {
-background-image: "https://raw.githubusercontent.com/axnyang/CS401/master/fem.jpg";
+.page-header{
+color:#fff;
+text-align:center;
+background-color:#159957;
+background-image:url(https://raw.githubusercontent.com/axnyang/CS401/master/fem.jpg)
 }
