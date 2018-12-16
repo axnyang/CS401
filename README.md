@@ -26,7 +26,7 @@ For this project, we provide 3 notebooks:
 - msd_vizualisation which loads the labeled msd dataset and creates the relevant plots for the data story.
 
 # Machine learning algorithm
-For this project, we have combined the tf-idf model with an linear kernel svm. First, we generate features with the tf-idf transform_fit() function, then we use our feature training data to train a linear svm predictive model, model.fit(X_train, Y_train), and we label our data with model.predict(X_test). The cross-validation procedure gives an accuracy of 64%.
+For this project, we have combined the tf-idf model with an linear kernel svm. First, we generate features with the tf-idf transform_fit() function, then we use our feature training data to train a linear svm predictive model, model.fit(X_train, Y_train), and we label our data with model.predict(X_test). We have also performed a validation step for the linear svm model which yielded an accuracy of 76%.
 
 We have also considered several other predictive algorithms. However, linear svm beat them by far.
 
