@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "feminism in here !"
-featured-img: ./data/feminism.png
+featured-img: ./data/feminism.jpg
 ---
 
 <div class="FeaturedImgBanner" {% if page.featured-img %} style="background-image: url('{{ page.featured-img }}');" {% endif %}>
