@@ -56,9 +56,7 @@ final_dataframe.head()
 ```
 
 
-<div class = "image">
-    <img src="data/fem.jpg", alt="feminism">
-    </div>
+
 
 <div>
 <style scoped>
