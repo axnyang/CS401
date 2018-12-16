@@ -1,61 +1,3 @@
-
-
-```python
-#As always, we import everything
-import pandas as pd
-import os
-import re
-import requests
-from bs4 import BeautifulSoup
-import numpy as np
-from collections import OrderedDict
-from tqdm import tqdm
-import nltk
-from nltk import word_tokenize
-from nltk.corpus import stopwords as stop_words
-from textblob import Word
-import pycountry
-from textblob import TextBlob
-from textblob.sentiments import NaiveBayesAnalyzer
-from gensim import corpora, models
-import matplotlib.pyplot as plt
-import json
-import pickle
-import lyricfetcher
-import csv
-import urllib
-from urllib.request import urlopen, HTTPError
-import langdetect
-from IPython.display import Image
-
-import warnings
-warnings.filterwarnings('ignore')
-
-data_dir = './' + 'data'
-```
-
-
-```python
-year_artist_name_title_genre = pd.read_csv(os.path.join(data_dir + "/year_artist_name_title_genre.csv")).set_index('track_id')
-final_dataframe = pd.read_csv("Final_With_Track_ID.csv")
-final_dataframe.drop('Unnamed: 0', axis =1, inplace=True)
-final_dataframe = final_dataframe[final_dataframe.year != 2010]
-final_dataframe['decade'] = (final_dataframe['year'] // 10) * 10
-def label_race (row):
-    if row['genre'] == 'Latin' or row['genre'] == 'New Age' or row['genre'] == 'World':
-        return 'Other'
-    else: 
-        return row['genre']
-    
-final_dataframe['GenreGroup'] = final_dataframe.apply(label_race, axis=1)
-```
-
-
-```python
-final_dataframe.head()
-```
-
-
 <div class = "image">
     <img src="data/fem.jpg", alt="feminism">
     </div>
@@ -169,14 +111,6 @@ Songs that are “explicitly” sexist are the most easily detectable. Explicit 
 To answer the second question, we decided to find songs that are labelled as feminist or sexist by internet users. We found such playlists and scraped internet for lyrics of these songs. For neutral lyrics, we looked to our own playlists to identify songs that fit the criteria, and scraped the lyrics for those songs. After converting lyrics from text to tf-idf feature vectors, we use scikit learn’s chi-square test to find the top 10 words that are the most correlated to each class. For feminist songs, it includes words like “worth”, “stronger”, “fix”, “respect” and “woman”. For sexist songs, unsurprisingly the list consists of degrading terms. Neutral songs show words that relate to other topics. We will perform the same test to all the songs in MSD we classify using the Machine Learning model we create, and expect to get similar results. 
 
 
-```python
-pd.DataFrame({'Feminist':['girls','boys','woman','respect','mess','river','fix','uh','stronger','worth'],
-             'Sexist':['dick','nigga','pussy','bitch','f*ck','ass','butt','body','baby','bitches'],
-            'Neutral':['em','remember','dah','singing','lord','wanna','bitch','girls','girl','river']})
-
-```
-
-
 
 
 <div>
@@ -279,44 +213,10 @@ pd.DataFrame({'Feminist':['girls','boys','woman','respect','mess','river','fix',
 Most of the songs produced during the period of 1970s and 2000s are neutral (close to 70%), followed by feminist songs which consist of 28% of the whole dataset. It is pleasantly surprising that sexist songs only consist of 2.9%. However, it may be due to the limitation of the model. As mentioned previously, songs that are explicitly sexist are easy to detect, but some of the more subtle ones are sometimes confused with neutral songs. In reality, we expect the percentage of sexist music to be higher. 
 
 
-```python
-plt.pie(final_dataframe['Class'].value_counts(), autopct='%1.1f%%', labels = final_dataframe['Class'].value_counts().index.tolist(), explode= [0.1]*len(final_dataframe['Class'].value_counts()), radius = 3)
-
-```
-
-
-
-
-    ([<matplotlib.patches.Wedge at 0x1216652b0>,
-      <matplotlib.patches.Wedge at 0x1216659b0>,
-      <matplotlib.patches.Wedge at 0x1216740f0>],
-     [Text(-1.9153954069210628, 2.8091387354749315, 'Neutral'),
-      Text(1.6498081329414518, -2.9728997837936353, 'Feminist'),
-      Text(3.38568319396377, -0.3116878408139861, 'Sexist')],
-     [Text(-1.0703680215147116, 1.5698128227654027, '69.0%'),
-      Text(0.9219516037025759, -1.6613263497670312, '28.0%'),
-      Text(1.8919994319209301, -0.17417849927840395, '2.9%')])
-
-
-
-
 ![png](output_13_1.png)
 
 
 A brief overview of number of feminist, neutral, and sexist songs are displayed in the graph below. We can see clearly here that significantly more data become available during recent years. We may need to account for this fact in our analysis later. Also, it is worth noticing that number of neutral songs and number of feminist songs are both steadily increasing throughout the year, where the number of sexist songs remain relatively constant. This means the proportion of sexist songs produced each year is getting lower. 
-
-
-```python
-# increase size
-count_through_year = final_dataframe.groupby(['year','Class']).size().unstack().plot(figsize = (20,10))
-count_through_year
-
-```
-
-
-
-
-    <matplotlib.axes._subplots.AxesSubplot at 0x1216bc208>
 
 
 
@@ -329,11 +229,7 @@ count_through_year
 The Music industry is booming between the 1970s and 2000s. Talented artists emerge in all genres of music and many songs are still well-loved by today's audience. Rock was a dominating genre during this time period. As shown below, close to 50% of all songs are Rock songs. 
 
 
-```python
-plot = plt.pie(final_dataframe['GenreGroup'].value_counts(), labels = final_dataframe['GenreGroup'].value_counts().index.tolist(), autopct='%1.1f%%', explode= [0.1]*len(final_dataframe['GenreGroup'].value_counts()), radius = 3)
 
-
-```
 
 
 ![png](output_18_0.png)
