@@ -1,5 +1,5 @@
 # Title
-Feminism and How Women are Depicted Through Lyrics
+Feminism vs. Sexism in Lyrics: A Portrait of Women in Recent Music
 
 # Data story website
 https://axnyang.github.io/CS401/
