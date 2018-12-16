@@ -1,13 +1,7 @@
-<div class = "image">
-    <img src="data/fem.jpg", alt="feminism">
-    </div>
-
-<div class="banner" style="background-image: linear-gradient(-225deg, rgba(0,101,168,0.6) 0%, rgba(0,36,61,0.6) 50%), url('data/fem.jpg');">
-  <div class="banner-content">
-    <h1>2 hour landing</h1>
-    <p>Learn HTML and CSS with Le Wagon</p>
-  </div>
-</div>
+---
+title:  "feminism"
+featured-img: /data/feminism.png
+---
 
 
 
